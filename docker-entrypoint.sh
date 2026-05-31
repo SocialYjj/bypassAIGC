@@ -1,7 +1,4 @@
 #!/bin/bash
-# ============================================
-# AI 学术写作助手 - Docker 启动脚本
-# ============================================
 
 set -e
 
@@ -12,17 +9,11 @@ echo "============================================"
 # 等待 PostgreSQL 就绪
 echo "⏳ 等待 PostgreSQL 数据库就绪..."
 until python -c "
-import sys
+import sys, os
 try:
-    import psycopg2
-    conn = psycopg2.connect(
-        host='postgres',
-        port=5432,
-        database='${DB_NAME:-ai_polish}',
-        user='${DB_USER:-ai_polish}',
-        password='${DB_PASSWORD}'
-    )
-    conn.close()
+    from sqlalchemy import create_engine
+    engine = create_engine(os.environ['DATABASE_URL'])
+    engine.connect()
     print('✅ PostgreSQL 已就绪')
     sys.exit(0)
 except Exception as e:
@@ -34,18 +25,14 @@ done
 
 echo "✅ PostgreSQL 连接成功"
 
-# 设置工作目录
 cd /app
 
-# 启动 FastAPI 应用
 echo ""
 echo "📍 服务地址: http://0.0.0.0:8000"
 echo "📍 管理后台: http://0.0.0.0:8000/admin"
-echo "📍 API 文档: http://0.0.0.0:8000/docs"
 echo ""
 echo "============================================"
 
-# 启动 uvicorn
 exec python -m uvicorn main:app \
     --host 0.0.0.0 \
     --port 8000 \

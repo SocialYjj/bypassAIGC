@@ -108,7 +108,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "*"  # 生产环境应设置为具体域名
     
     class Config:
-        env_file = get_env_file_path()
+        env_file = get_env_file_path() or ""
         case_sensitive = True
 
 

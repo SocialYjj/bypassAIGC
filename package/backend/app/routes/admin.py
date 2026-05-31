@@ -782,11 +782,27 @@ async def update_config(
     from app.config import get_env_file_path
     env_path = get_env_file_path()
 
-    # Docker 环境（env_path 为 None）：直接更新环境变量
+    # Docker 环境（env_path 为 None）：直接更新环境变量和 settings 对象
     if env_path is None:
         for key, value in updates.items():
             os.environ[key] = value
-        reload_settings()
+            # 直接更新 settings 对象
+            if hasattr(settings, key):
+                field_type = type(getattr(settings, key))
+                try:
+                    if field_type == int:
+                        setattr(settings, key, int(value))
+                    elif field_type == bool:
+                        setattr(settings, key, value.lower() in ('true', '1', 'yes'))
+                    else:
+                        setattr(settings, key, value)
+                except (ValueError, TypeError):
+                    setattr(settings, key, value)
+        # 重新生成密码哈希
+        from passlib.context import CryptContext
+        _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(settings.ADMIN_PASSWORD[:72])
+        
         if "MAX_CONCURRENT_USERS" in updates:
             try:
                 await concurrency_manager.update_limit(int(updates["MAX_CONCURRENT_USERS"]))

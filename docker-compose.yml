@@ -1,82 +1,9 @@
-# ============================================
-# AI 学术写作助手 - Docker Compose
-# ============================================
-# 使用方法:
-#   1. 复制 .env.example 为 .env 并修改配置
-#   2. 运行: docker-compose up -d
-#   3. 访问: http://localhost:8000
-#
-# 镜像来源: GitHub Container Registry (GHCR)
-# 每次推送代码到 master 分支会自动构建镜像
-# ============================================
-
 services:
-  # ============================================
-  # FastAPI 应用
-  # ============================================
   app:
     image: ghcr.io/socialyjj/bypassaigc:latest
-    container_name: ai-writing-app
-    restart: unless-stopped
+    container_name: bypassAIGC
+    restart: always
     ports:
-      - "${APP_PORT:-8000}:8000"
-    environment:
-      - DATABASE_URL=postgresql://${DB_USER:-ai_polish}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-ai_polish}
-      - SECRET_KEY=${SECRET_KEY}
-      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - CORS_ORIGINS=${CORS_ORIGINS:-*}
-      - POLISH_API_KEY=${POLISH_API_KEY}
-      - POLISH_BASE_URL=${POLISH_BASE_URL}
-      - POLISH_MODEL=${POLISH_MODEL:-gemini-2.5-pro}
-      - ENHANCE_API_KEY=${ENHANCE_API_KEY}
-      - ENHANCE_BASE_URL=${ENHANCE_BASE_URL}
-      - ENHANCE_MODEL=${ENHANCE_MODEL:-gemini-2.5-pro}
-      - MAX_CONCURRENT_USERS=${MAX_CONCURRENT_USERS:-5}
-      - DEFAULT_USAGE_LIMIT=${DEFAULT_USAGE_LIMIT:-1}
-    volumes:
-      - app-data:/app/data
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - ai-network
-
-  # ============================================
-  # PostgreSQL 数据库
-  # ============================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: ai-writing-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=${DB_NAME:-ai_polish}
-      - POSTGRES_USER=${DB_USER:-ai_polish}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ai_polish} -d ${DB_NAME:-ai_polish}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ai-network
-
-# ============================================
-# 数据卷
-# ============================================
-volumes:
-  postgres-data:
-    driver: local
-  app-data:
-    driver: local
-
-# ============================================
-# 网络
-# ============================================
-networks:
-  ai-network:
-    driver: bridge
+      - "8019:8000"
+    env_file:
+      - .env

@@ -20,7 +20,6 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-# 安装依赖并清理缓存
 COPY package/backend/requirements.txt ./backend/requirements.txt
 RUN apk add --no-cache --virtual .build-deps \
     gcc musl-dev libffi-dev \
@@ -28,16 +27,19 @@ RUN apk add --no-cache --virtual .build-deps \
     && apk del .build-deps \
     && apk add --no-cache curl
 
-# 复制代码
 COPY package/backend/ ./backend/
 COPY package/main.py ./
 COPY --from=frontend-builder /app/frontend/dist ./static
-COPY docker-entrypoint.sh ./
-RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh && mkdir -p /app/data
+RUN mkdir -p /app/data
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["sh", "-c", "\
+    echo '等待数据库就绪...' && \
+    python -c 'import time; time.sleep(3)' && \
+    echo '启动服务...' && \
+    python -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info \
+"]

@@ -134,7 +134,7 @@ def reload_settings():
     
     # 重新读取 .env 文件到环境变量 - 使用 exe 目录
     env_path = get_env_file_path()
-    if os.path.exists(env_path):
+    if env_path and os.path.exists(env_path):
         with open(env_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
@@ -159,7 +159,7 @@ def reload_settings():
                             setattr(settings, key, value)
     
     # 重新生成密码哈希
-    settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(settings.ADMIN_PASSWORD)
+    settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(settings.ADMIN_PASSWORD[:72])
     
     return settings
 

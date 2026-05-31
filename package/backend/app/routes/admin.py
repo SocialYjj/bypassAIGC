@@ -782,6 +782,18 @@ async def update_config(
     from app.config import get_env_file_path
     env_path = get_env_file_path()
 
+    # Docker 环境（env_path 为 None）：直接更新环境变量
+    if env_path is None:
+        for key, value in updates.items():
+            os.environ[key] = value
+        reload_settings()
+        if "MAX_CONCURRENT_USERS" in updates:
+            try:
+                await concurrency_manager.update_limit(int(updates["MAX_CONCURRENT_USERS"]))
+            except ValueError:
+                pass
+        return {"message": "配置已更新", "updated_keys": list(updates.keys())}
+
     if not os.path.exists(env_path):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f".env 文件不存在: {env_path}")
 

@@ -3,9 +3,31 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.config import settings
 
+
+def get_engine_config():
+    """根据数据库类型获取引擎配置"""
+    db_url = settings.DATABASE_URL
+    
+    if "sqlite" in db_url:
+        # SQLite 配置
+        return {
+            "connect_args": {"check_same_thread": False}
+        }
+    elif "postgresql" in db_url:
+        # PostgreSQL 配置
+        return {
+            "pool_size": 5,
+            "max_overflow": 10,
+            "pool_pre_ping": True,
+            "pool_recycle": 3600,
+        }
+    else:
+        return {}
+
+
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
+    **get_engine_config()
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -42,6 +64,13 @@ def init_db():
     except Exception as e:
         print(f"✗ 数据库初始化失败: {str(e)}")
         raise
+
+
+def _get_boolean_default(value):
+    """获取布尔值的默认值表示（兼容SQLite和PostgreSQL）"""
+    if "postgresql" in settings.DATABASE_URL:
+        return "TRUE" if value else "FALSE"
+    return "1" if value else "0"
 
 
 def _add_column_safely(conn, table_name, column_name, column_def):
@@ -167,7 +196,7 @@ def _migrate_database_schema():
                     segment_columns = {column["name"] for column in inspector.get_columns("optimization_segments")}
                     
                     if "is_title" not in segment_columns:
-                        if _add_column_safely(conn, "optimization_segments", "is_title", "BOOLEAN DEFAULT 0"):
+                        if _add_column_safely(conn, "optimization_segments", "is_title", f"BOOLEAN DEFAULT {_get_boolean_default(False)}"):
                             print("  ✓ 添加字段: optimization_segments.is_title")
             
                 # 迁移 custom_prompts 表
@@ -175,11 +204,11 @@ def _migrate_database_schema():
                     prompt_columns = {column["name"] for column in inspector.get_columns("custom_prompts")}
                     
                     if "is_system" not in prompt_columns:
-                        if _add_column_safely(conn, "custom_prompts", "is_system", "BOOLEAN DEFAULT 0"):
+                        if _add_column_safely(conn, "custom_prompts", "is_system", f"BOOLEAN DEFAULT {_get_boolean_default(False)}"):
                             print("  ✓ 添加字段: custom_prompts.is_system")
                     
                     if "is_active" not in prompt_columns:
-                        if _add_column_safely(conn, "custom_prompts", "is_active", "BOOLEAN DEFAULT 1"):
+                        if _add_column_safely(conn, "custom_prompts", "is_active", f"BOOLEAN DEFAULT {_get_boolean_default(True)}"):
                             print("  ✓ 添加字段: custom_prompts.is_active")
     
     except Exception as e:

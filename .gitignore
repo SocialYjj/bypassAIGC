@@ -62,3 +62,7 @@ package/build/
 
 参考项目/
 .ace-tool/
+
+# Docker
+docker-compose.override.yml
+postgres-data/

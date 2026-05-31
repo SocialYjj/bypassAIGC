@@ -20,7 +20,18 @@ def get_env_file_path():
 
 
 def get_default_database_url():
-    """获取默认数据库 URL，指向 exe 同目录"""
+    """获取默认数据库 URL
+    
+    优先级：
+    1. 环境变量 DATABASE_URL（Docker/PostgreSQL）
+    2. exe 同目录的 SQLite 数据库
+    """
+    # 优先使用环境变量
+    env_db_url = os.environ.get('DATABASE_URL')
+    if env_db_url:
+        return env_db_url
+    
+    # 默认使用 SQLite
     exe_dir = get_exe_dir()
     db_path = os.path.join(exe_dir, 'ai_polish.db')
     return f"sqlite:///{db_path}"

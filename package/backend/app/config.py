@@ -15,7 +15,10 @@ def get_exe_dir():
 
 
 def get_env_file_path():
-    """获取 .env 文件路径"""
+    """获取 .env 文件路径（Docker环境中返回None）"""
+    # Docker环境中使用环境变量，不需要.env文件
+    if os.environ.get('DATABASE_URL'):
+        return None
     return os.path.join(get_exe_dir(), '.env')
 
 

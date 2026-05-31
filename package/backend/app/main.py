@@ -4,9 +4,18 @@ from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import os
 import sys
+import logging
 from datetime import datetime, timedelta
 from collections import defaultdict
 from typing import Dict, Tuple, Optional
+
+# 配置日志系统
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # 先导入 config 以便加载环境变量
 from app.config import settings
@@ -50,23 +59,28 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
 
 # 检查默认密钥 - 仅警告，不退出（允许开发环境使用）
 if settings.SECRET_KEY == "your-secret-key-change-this-in-production":
-    print("\n" + "="*60)
-    print("⚠️  安全警告: 检测到默认 SECRET_KEY!")
-    print("="*60)
-    print("生产环境必须修改 SECRET_KEY,否则 JWT token 可被伪造!")
-    print("请在 .env 文件中设置强密钥:")
-    print("  python -c \"import secrets; print(secrets.token_urlsafe(32))\"")
-    print("="*60 + "\n")
-    # 仅警告,不强制退出 (开发环境可能需要)
+    logger.warning("="*60)
+    logger.warning("⚠️  安全警告: 检测到默认 SECRET_KEY!")
+    logger.warning("="*60)
+    logger.warning("生产环境必须修改 SECRET_KEY,否则 JWT token 可被伪造!")
+    logger.warning("请在 .env 文件中设置强密钥:")
+    logger.warning("  python -c \"import secrets; print(secrets.token_urlsafe(32))\"")
+    logger.warning("="*60)
 
 if settings.ADMIN_PASSWORD == "admin123":
-    print("\n" + "="*60)
-    print("⚠️  安全警告: 检测到默认管理员密码!")
-    print("="*60)
-    print("生产环境必须修改 ADMIN_PASSWORD!")
-    print("请在 .env 文件中设置强密码 (建议12位以上)")
-    print("="*60 + "\n")
-    # 仅警告,不强制退出 (开发环境可能需要)
+    logger.warning("="*60)
+    logger.warning("⚠️  安全警告: 检测到默认管理员密码!")
+    logger.warning("="*60)
+    logger.warning("生产环境必须修改 ADMIN_PASSWORD!")
+    logger.warning("请在 .env 文件中设置强密码 (建议12位以上)")
+    logger.warning("="*60)
+
+# 解析 CORS 来源
+cors_origins = settings.CORS_ORIGINS
+if cors_origins == "*":
+    allow_origins = ["*"]
+else:
+    allow_origins = [origin.strip() for origin in cors_origins.split(",")]
 
 app = FastAPI(
     title="AI 论文润色增强系统",
@@ -80,10 +94,10 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # 添加缓存控制中间件
 app.add_middleware(CacheControlMiddleware)
 
-# CORS 配置
+# CORS 配置（使用配置文件中的来源）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 生产环境应设置具体域名
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

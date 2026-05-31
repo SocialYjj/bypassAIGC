@@ -2,7 +2,7 @@
 # AI 学术写作助手 - Docker Compose
 # ============================================
 # 使用方法:
-#   1. 复制 .env.docker 为 .env 并修改配置
+#   1. 复制 .env.example 为 .env 并修改配置
 #   2. 运行: docker-compose up -d
 #   3. 访问: http://localhost:8000
 # ============================================
@@ -24,6 +24,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
       - POLISH_API_KEY=${POLISH_API_KEY}
       - POLISH_BASE_URL=${POLISH_BASE_URL}
       - POLISH_MODEL=${POLISH_MODEL:-gemini-2.5-pro}

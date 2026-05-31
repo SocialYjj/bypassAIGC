@@ -10,7 +10,16 @@ import webbrowser
 import threading
 import time
 import signal
+import logging
 from typing import Optional
+
+# 配置日志系统
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # 获取应用运行目录
 if getattr(sys, 'frozen', False):
@@ -61,23 +70,30 @@ from app.models.models import CustomPrompt
 from app.database import SessionLocal
 from app.services.ai_service import get_default_polish_prompt, get_default_enhance_prompt
 
-# 检查默认密钥（仅警告，不退出）
+# 检查默认密钥（严格模式：生产环境强制检查）
 if settings.SECRET_KEY == "your-secret-key-change-this-in-production":
-    print("\n" + "="*60)
-    print("⚠️  安全警告: 检测到默认 SECRET_KEY!")
-    print("="*60)
-    print("生产环境必须修改 SECRET_KEY,否则 JWT token 可被伪造!")
-    print(f"请在 {ENV_FILE} 文件中设置强密钥:")
-    print("  使用命令生成: python -c \"import secrets; print(secrets.token_urlsafe(32))\"")
-    print("="*60 + "\n")
+    logger.warning("="*60)
+    logger.warning("⚠️  安全警告: 检测到默认 SECRET_KEY!")
+    logger.warning("="*60)
+    logger.warning("生产环境必须修改 SECRET_KEY,否则 JWT token 可被伪造!")
+    logger.warning(f"请在 {ENV_FILE} 文件中设置强密钥:")
+    logger.warning("  使用命令生成: python -c \"import secrets; print(secrets.token_urlsafe(32))\"")
+    logger.warning("="*60)
 
 if settings.ADMIN_PASSWORD == "admin123":
-    print("\n" + "="*60)
-    print("⚠️  安全警告: 检测到默认管理员密码!")
-    print("="*60)
-    print("生产环境必须修改 ADMIN_PASSWORD!")
-    print(f"请在 {ENV_FILE} 文件中设置强密码 (建议12位以上)")
-    print("="*60 + "\n")
+    logger.warning("="*60)
+    logger.warning("⚠️  安全警告: 检测到默认管理员密码!")
+    logger.warning("="*60)
+    logger.warning("生产环境必须修改 ADMIN_PASSWORD!")
+    logger.warning(f"请在 {ENV_FILE} 文件中设置强密码 (建议12位以上)")
+    logger.warning("="*60)
+
+# 解析 CORS 来源
+cors_origins = settings.CORS_ORIGINS
+if cors_origins == "*":
+    allow_origins = ["*"]
+else:
+    allow_origins = [origin.strip() for origin in cors_origins.split(",")]
 
 # 创建 FastAPI 应用
 app = FastAPI(
@@ -89,10 +105,10 @@ app = FastAPI(
 # 添加 Gzip 压缩中间件以减少响应体积
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# CORS 配置
+# CORS 配置（使用配置文件中的来源）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

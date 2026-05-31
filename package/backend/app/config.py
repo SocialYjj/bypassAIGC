@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, List
 import os
 import sys
 
@@ -99,6 +99,10 @@ class Settings(BaseSettings):
     # 管理员账户
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin123"
+    ADMIN_PASSWORD_HASH: str = ""  # 启动时自动生成
+    
+    # CORS 配置（允许的来源，逗号分隔）
+    CORS_ORIGINS: str = "*"  # 生产环境应设置为具体域名
     
     class Config:
         env_file = get_env_file_path()
@@ -112,6 +116,11 @@ if os.path.exists(_env_path):
     load_dotenv(_env_path)
 
 settings = Settings()
+
+# 生成管理员密码哈希
+from passlib.context import CryptContext
+_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(settings.ADMIN_PASSWORD)
 
 
 def reload_settings():
@@ -143,6 +152,9 @@ def reload_settings():
                                 setattr(settings, key, value)
                         except (ValueError, TypeError):
                             setattr(settings, key, value)
+    
+    # 重新生成密码哈希
+    settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(settings.ADMIN_PASSWORD)
     
     return settings
 

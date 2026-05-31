@@ -31,6 +31,8 @@ from app.utils.auth import (
     generate_access_link,
     generate_card_key,
     verify_token,
+    verify_password,
+    get_password_hash,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -67,7 +69,11 @@ ALLOWED_TABLES: Dict[str, Type] = {
 
 
 def verify_admin_credentials(username: str, password: str) -> bool:
-    return username == settings.ADMIN_USERNAME and password == settings.ADMIN_PASSWORD
+    """验证管理员凭据（使用bcrypt哈希比较）"""
+    if username != settings.ADMIN_USERNAME:
+        return False
+    # 使用哈希密码验证
+    return verify_password(password, settings.ADMIN_PASSWORD_HASH)
 
 
 def verify_admin_token(token: str) -> bool:

@@ -1,0 +1,12 @@
+# 强制使用 LF 换行符
+* text=auto eol=lf
+
+# 二制文件
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary

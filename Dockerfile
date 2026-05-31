@@ -8,13 +8,13 @@ FROM node:20-slim AS frontend-builder
 WORKDIR /app/frontend
 
 # 复制前端依赖文件
-COPY frontend/package.json frontend/package-lock.json ./
+COPY package/frontend/package.json package/frontend/package-lock.json ./
 
 # 安装依赖
 RUN npm ci
 
 # 复制前端源码
-COPY frontend/ ./
+COPY package/frontend/ ./
 
 # 构建前端
 RUN npm run build

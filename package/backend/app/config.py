@@ -112,9 +112,9 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-# 加载 exe 目录下的 .env 文件
+# 加载 exe 目录下的 .env 文件（如果存在）
 _env_path = get_env_file_path()
-if os.path.exists(_env_path):
+if _env_path and os.path.exists(_env_path):
     from dotenv import load_dotenv
     load_dotenv(_env_path)
 

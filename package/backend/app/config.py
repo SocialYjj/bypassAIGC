@@ -120,7 +120,9 @@ settings = Settings()
 # 生成管理员密码哈希
 from passlib.context import CryptContext
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(settings.ADMIN_PASSWORD)
+# 截断密码到72字节（bcrypt限制）
+_password = settings.ADMIN_PASSWORD[:72]
+settings.ADMIN_PASSWORD_HASH = _pwd_context.hash(_password)
 
 
 def reload_settings():

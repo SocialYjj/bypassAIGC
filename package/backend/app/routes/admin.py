@@ -72,8 +72,8 @@ def verify_admin_credentials(username: str, password: str) -> bool:
     """验证管理员凭据（使用bcrypt哈希比较）"""
     if username != settings.ADMIN_USERNAME:
         return False
-    # 使用哈希密码验证
-    return verify_password(password, settings.ADMIN_PASSWORD_HASH)
+    # 截断密码到72字节（bcrypt限制）
+    return verify_password(password[:72], settings.ADMIN_PASSWORD_HASH)
 
 
 def verify_admin_token(token: str) -> bool:

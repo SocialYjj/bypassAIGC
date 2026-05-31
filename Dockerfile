@@ -33,7 +33,7 @@ COPY package/backend/ ./backend/
 COPY package/main.py ./
 COPY --from=frontend-builder /app/frontend/dist ./static
 COPY docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh && mkdir -p /app/data
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh && mkdir -p /app/data
 
 EXPOSE 8000
 

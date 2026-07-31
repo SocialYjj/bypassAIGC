@@ -1,3 +1,7 @@
+> 本项目是基于 [chi111i/BypassAIGC](https://github.com/chi111i/BypassAIGC) 修改而来。
+> **原作者**：chi111i
+
+
 ## AI 学术写作助手
 
 专业论文润色与语言优化系统
